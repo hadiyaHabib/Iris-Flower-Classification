@@ -1,16 +1,16 @@
 # Iris-Flower-Classification
 Description
-Iris dataset par do machine learning models train kiye gaye hain — K-Nearest Neighbors aur Random Forest — taake phoolon ki species predict ki ja sake based on petal/sepal measurements.
+Two machine learning models K-Nearest Neighbors and Random Forest  are trained on the classic Iris dataset to predict flower species based on petal and sepal measurements.
 Features
 
-Exploratory Data Analysis (EDA) with histograms aur pairplots
+Exploratory Data Analysis (EDA) with histograms and pairplots
 Data preprocessing with StandardScaler
-Model training: KNN aur Random Forest
+Model training: KNN and Random Forest
 Confusion matrix visualization
 Feature importance chart
 
 Models Used
-ModelDescriptionK-Nearest Neighborsn_neighbors=5Random Forestn_estimators=100
+ModelParametersK-Nearest Neighborsn_neighbors=5Random Forestn_estimators=100
 Output Files
 
 iris_eda.png — Feature distributions
