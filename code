@@ -1,0 +1,116 @@
+# TASK 1: Iris Flower Classification
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import (accuracy_score, classification_report,
+                             confusion_matrix)
+iris = load_iris()
+df = pd.DataFrame(iris.data, columns=iris.feature_names)
+df['species'] = pd.Categorical.from_codes(iris.target, iris.target_names)
+
+print("=== Dataset Info ===")
+print(df.head())
+print(f"\nShape: {df.shape}")
+print("\nClass Distribution:")
+print(df['species'].value_counts())
+print("\nStatistics:")
+print(df.describe())
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 8))
+fig.suptitle('Iris Dataset - EDA', fontsize=16, fontweight='bold')
+
+features = iris.feature_names
+colors   = ['#e74c3c', '#2ecc71', '#3498db']
+
+for i, ax in enumerate(axes.flat):
+    for j, species in enumerate(iris.target_names):
+        subset = df[df['species'] == species]
+        ax.hist(subset[features[i]], alpha=0.7, label=species,
+                color=colors[j], bins=15, edgecolor='white')
+    ax.set_title(features[i].replace(' (cm)', ''), fontweight='bold')
+    ax.set_xlabel('Value (cm)')
+    ax.set_ylabel('Frequency')
+    ax.legend(fontsize=8)
+
+plt.tight_layout()
+plt.savefig('iris_eda.png', dpi=150, bbox_inches='tight')
+plt.show()
+
+# Pairplot
+sns.pairplot(df, hue='species', palette={'setosa': '#e74c3c',
+                                          'versicolor': '#2ecc71',
+                                          'virginica': '#3498db'})
+plt.suptitle('Iris Pairplot', y=1.02, fontsize=14, fontweight='bold')
+plt.savefig('iris_pairplot.png', dpi=150, bbox_inches='tight')
+plt.show()
+X = df[iris.feature_names]
+y = df['species']
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y)
+
+scaler  = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test  = scaler.transform(X_test)
+
+models = {
+    'K-Nearest Neighbors': KNeighborsClassifier(n_neighbors=5),
+    'Random Forest':        RandomForestClassifier(n_estimators=100,
+                                                   random_state=42)
+}
+
+results = {}
+for name, model in models.items():
+    model.fit(X_train, y_train)
+    y_pred  = model.predict(X_test)
+    acc     = accuracy_score(y_test, y_pred)
+    results[name] = {'model': model, 'predictions': y_pred, 'accuracy': acc}
+    print(f"\n=== {name} ===")
+    print(f"Accuracy: {acc*100:.2f}%")
+    print(classification_report(y_test, y_pred))
+
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+fig.suptitle('Confusion Matrices', fontsize=16, fontweight='bold')
+
+for ax, (name, res) in zip(axes, results.items()):
+    cm = confusion_matrix(y_test, res['predictions'],
+                          labels=iris.target_names)
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
+                xticklabels=iris.target_names,
+                yticklabels=iris.target_names, ax=ax)
+    ax.set_title(f"{name}\nAccuracy: {res['accuracy']*100:.2f}%",
+                 fontweight='bold')
+    ax.set_xlabel('Predicted')
+    ax.set_ylabel('Actual')
+
+plt.tight_layout()
+plt.savefig('iris_confusion_matrix.png', dpi=150, bbox_inches='tight')
+plt.show()
+
+rf_model    = results['Random Forest']['model']
+importances = rf_model.feature_importances_
+
+plt.figure(figsize=(8, 5))
+bars = plt.barh(iris.feature_names, importances,
+                color=['#3498db','#e74c3c','#2ecc71','#f39c12'])
+plt.xlabel('Importance Score')
+plt.title('Feature Importance — Random Forest', fontweight='bold')
+for bar, val in zip(bars, importances):
+    plt.text(bar.get_width() + 0.005, bar.get_y() + bar.get_height()/2,
+             f'{val:.3f}', va='center', fontweight='bold')
+plt.tight_layout()
+plt.savefig('iris_feature_importance.png', dpi=150, bbox_inches='tight')
+plt.show()
+
+sample       = np.array([[5.1, 3.5, 1.4, 0.2]])
+sample_scaled = scaler.transform(sample)
+prediction   = rf_model.predict(sample_scaled)
+print(f"\nSample prediction: {prediction[0]}")
